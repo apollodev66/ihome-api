@@ -1,0 +1,15 @@
+{
+    "version": 2,
+    "bluids": [
+        {
+            "src": "app.js",
+            "usr": "@now/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "app.js"
+        }
+    ]
+}
