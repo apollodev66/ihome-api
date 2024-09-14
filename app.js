@@ -25,7 +25,13 @@ const dbConfig = {
 };
 
 // Configure CORS
-app.use(cors());
+app.use(
+  cors({
+    origin: 'http://localhost:3000', // อนุญาตให้ frontend ที่รันบน localhost:3000 เรียกใช้ API ได้
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // อนุญาต HTTP methods ที่ต้องการ
+    allowedHeaders: ['Content-Type', 'Authorization'], // อนุญาต headers ที่จำเป็น
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -49,6 +55,7 @@ const poolPromise = sql.connect(dbConfig).catch((err) => {
   console.error("Database connection failed:", err);
 });
 
+// Login endpoint
 app.post("/api/login", async (req, res) => {
   console.log("Received /login request");
   const { CODE, USERPASS } = req.body;
@@ -63,9 +70,7 @@ app.post("/api/login", async (req, res) => {
     const CSUSER = result.recordset;
 
     if (CSUSER.length === 0) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "User not found" });
+      return res.status(404).json({ status: "error", message: "User not found" });
     }
 
     if (USERPASS === CSUSER[0].USERPASS) {
@@ -80,9 +85,7 @@ app.post("/api/login", async (req, res) => {
         mynameth: CSUSER[0].MYNAMETH,
       });
     } else {
-      return res
-        .status(401)
-        .json({ status: "error", message: "Invalid password" });
+      return res.status(401).json({ status: "error", message: "Invalid password" });
     }
   } catch (err) {
     console.error("Login error:", err);
@@ -90,7 +93,7 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Endpoint for submitting data
+// Endpoint for submitting data with file uploads
 app.post(
   "/api/submit",
   upload.fields([
@@ -152,42 +155,17 @@ app.post(
       request.input("purchaserName", sql.NVarChar, purchaserName);
       request.input("purchaserPhone", sql.NVarChar, purchaserPhone);
       request.input("budget", sql.NVarChar, budget);
-      request.input(
-        "completedSteps",
-        sql.NVarChar,
-        JSON.stringify(completedSteps)
-      );
-      request.input(
-        "uncompletedSteps",
-        sql.NVarChar,
-        JSON.stringify(uncompletedSteps)
-      );
+      request.input("completedSteps", sql.NVarChar, JSON.stringify(completedSteps));
+      request.input("uncompletedSteps", sql.NVarChar, JSON.stringify(uncompletedSteps));
       request.input("appointment", sql.NVarChar, appointment);
       request.input("location", sql.NVarChar, location);
       request.input("surveyDate", sql.NVarChar, surveyDate);
 
       const { frontImg, leftImg, rightImg, backImg, interiorImg } = req.files;
-
-      request.input(
-        "frontImg",
-        sql.NVarChar,
-        frontImg ? frontImg[0].filename : null
-      );
-      request.input(
-        "leftImg",
-        sql.NVarChar,
-        leftImg ? leftImg[0].filename : null
-      );
-      request.input(
-        "rightImg",
-        sql.NVarChar,
-        rightImg ? rightImg[0].filename : null
-      );
-      request.input(
-        "backImg",
-        sql.NVarChar,
-        backImg ? backImg[0].filename : null
-      );
+      request.input("frontImg", sql.NVarChar, frontImg ? frontImg[0].filename : null);
+      request.input("leftImg", sql.NVarChar, leftImg ? leftImg[0].filename : null);
+      request.input("rightImg", sql.NVarChar, rightImg ? rightImg[0].filename : null);
+      request.input("backImg", sql.NVarChar, backImg ? backImg[0].filename : null);
 
       const interiorImgFilenames = interiorImg
         ? interiorImg.map((file) => file.filename).join(",")
@@ -209,9 +187,7 @@ app.post(
       res.status(200).json({ message: "Data inserted successfully" });
     } catch (error) {
       console.error("Error inserting data:", error);
-      res
-        .status(500)
-        .json({ error: "An error occurred", details: error.message });
+      res.status(500).json({ error: "An error occurred", details: error.message });
     }
   }
 );
