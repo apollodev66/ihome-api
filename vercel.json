@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "bluids": [
+    "builds": [
         {
             "src": "app.js",
             "usr": "@now/node"
